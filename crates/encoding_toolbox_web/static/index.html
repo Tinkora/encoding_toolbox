@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Encode, decode, digest, and authenticate text or local files without uploading them.">
+  <title>Encoding Toolbox · Tinkora</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #f3f5f6;
+      --surface: #ffffff;
+      --surface-subtle: #e9eef0;
+      --ink: #18212b;
+      --muted: #596672;
+      --border: #c6d0d6;
+      --primary: #126452;
+      --primary-hover: #0d5042;
+      --primary-soft: #dcefe9;
+      --warning: #a14324;
+      --warning-soft: #fff0e8;
+      --danger: #b42318;
+      --focus: #245edb;
+      --radius: 6px;
+      --font-sans: "IBM Plex Sans", "Avenir Next", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-width: 320px;
+      background: var(--canvas);
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button,
+    input[type="radio"],
+    input[type="file"],
+    select {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    a:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--focus) 38%, transparent);
+      outline-offset: 2px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .topbar {
+      border-bottom: 1px solid #283541;
+      background: var(--ink);
+      color: #f8fafb;
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(100% - 32px, 1180px);
+      min-height: 58px;
+      margin: 0 auto;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      min-width: 0;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .brand strong {
+      font-size: 1.05rem;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .brand span {
+      color: #a9bac5;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+
+    .topbar a {
+      color: #d9e8e3;
+      font-size: 0.84rem;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+      white-space: nowrap;
+    }
+
+    main {
+      width: min(100% - 32px, 1180px);
+      margin: 0 auto;
+      padding: 24px 0 36px;
+    }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: clamp(1.45rem, 1.2rem + 0.8vw, 2rem);
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .intro p {
+      max-width: 700px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .local-badge {
+      border: 1px solid #8bbcac;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: #174f42;
+      padding: 5px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .tool {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    fieldset {
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    legend,
+    .field-label {
+      display: block;
+      margin: 0 0 7px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(300px, 1fr) minmax(180px, 280px);
+      gap: 20px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      background: #f8fafb;
+    }
+
+    .segments {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 4px;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-subtle);
+    }
+
+    .segments.source-segments {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .segments input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .segments label {
+      min-width: 0;
+      border-radius: 4px;
+      padding: 7px 8px;
+      color: #4d5964;
+      font-size: 0.82rem;
+      font-weight: 650;
+      text-align: center;
+      transition: background-color 180ms ease, color 180ms ease;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .segments input:checked + label {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgb(24 33 43 / 14%);
+    }
+
+    .segments input:focus-visible + label {
+      outline: 3px solid color-mix(in srgb, var(--focus) 38%, transparent);
+      outline-offset: 1px;
+    }
+
+    select,
+    textarea,
+    input[type="password"],
+    input[type="file"] {
+      width: 100%;
+      border: 1px solid #aebbc3;
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    select,
+    input[type="password"],
+    input[type="file"] {
+      min-height: 40px;
+      padding: 8px 10px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      min-height: 430px;
+    }
+
+    .pane {
+      min-width: 0;
+      padding: 18px;
+    }
+
+    .pane + .pane {
+      border-left: 1px solid var(--border);
+      background: #fbfcfc;
+    }
+
+    .pane-header {
+      display: flex;
+      min-height: 33px;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    .pane h2 {
+      margin: 0;
+      font-size: 0.96rem;
+      letter-spacing: 0;
+    }
+
+    .pane-meta {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-align: right;
+    }
+
+    textarea {
+      display: block;
+      min-height: 260px;
+      resize: vertical;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    textarea[readonly] {
+      background: #f5f7f8;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .source-control {
+      width: min(240px, 100%);
+      margin-bottom: 14px;
+    }
+
+    .file-box {
+      min-height: 260px;
+      border: 1px dashed #8da0ab;
+      border-radius: var(--radius);
+      background: #f8fafb;
+      padding: 18px;
+    }
+
+    .file-box p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      overflow-wrap: anywhere;
+    }
+
+    .safety-note {
+      margin: 0 0 12px;
+      border-left: 3px solid var(--warning);
+      background: var(--warning-soft);
+      color: #6b321e;
+      padding: 8px 10px;
+      font-size: 0.8rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      font-weight: 700;
+      transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+    }
+
+    button.primary {
+      min-width: 104px;
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    button.secondary {
+      border-color: #9eacb5;
+      background: var(--surface);
+      color: #26343e;
+    }
+
+    button.secondary:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.52;
+    }
+
+    .feedback {
+      min-height: 24px;
+      padding: 0 18px 14px;
+      font-size: 0.82rem;
+    }
+
+    .feedback p {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    #status-message {
+      color: var(--primary);
+    }
+
+    #error-message {
+      color: var(--danger);
+      font-weight: 650;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    footer a {
+      color: var(--primary);
+    }
+
+    @media (max-width: 800px) {
+      .toolbar,
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .pane + .pane {
+        border-top: 1px solid var(--border);
+        border-left: 0;
+      }
+
+      .workspace {
+        min-height: 0;
+      }
+
+      textarea,
+      .file-box {
+        min-height: 200px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .topbar-inner,
+      main {
+        width: min(100% - 20px, 1180px);
+      }
+
+      .brand span,
+      .local-badge {
+        display: none;
+      }
+
+      .intro {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .toolbar,
+      .pane {
+        padding: 14px;
+      }
+
+      .segments label {
+        padding-inline: 4px;
+        font-size: 0.76rem;
+      }
+
+      footer {
+        display: block;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <strong>Encoding Toolbox</strong>
+        <span>Tinkora</span>
+      </div>
+      <a href="https://github.com/Tinkora/encoding_toolbox">Source</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <h1 id="page-title">Encoding Toolbox</h1>
+        <p>Encode, decode, digest, and authenticate text or local files. Your input stays in this browser.</p>
+      </div>
+      <span class="local-badge">Local processing</span>
+    </section>
+
+    <form id="tool-form" class="tool">
+      <div class="toolbar">
+        <fieldset>
+          <legend>Operation</legend>
+          <div class="segments">
+            <input id="operation-encode" name="operation" type="radio" value="encode" checked>
+            <label for="operation-encode">Encode</label>
+            <input id="operation-decode" name="operation" type="radio" value="decode">
+            <label for="operation-decode">Decode</label>
+            <input id="operation-digest" name="operation" type="radio" value="digest">
+            <label for="operation-digest">Digest</label>
+            <input id="operation-hmac" name="operation" type="radio" value="hmac">
+            <label for="operation-hmac">HMAC</label>
+          </div>
+        </fieldset>
+
+        <div>
+          <label class="field-label" for="algorithm">Algorithm</label>
+          <select id="algorithm" aria-describedby="algorithm-note"></select>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <section class="pane" aria-labelledby="input-heading">
+          <div class="pane-header">
+            <h2 id="input-heading">Input</h2>
+            <span id="input-limit" class="pane-meta">Text · 1 MiB max</span>
+          </div>
+
+          <fieldset class="source-control">
+            <legend>Input source</legend>
+            <div class="segments source-segments">
+              <input id="source-text" name="source" type="radio" value="text" checked>
+              <label for="source-text">Text</label>
+              <input id="source-file" name="source" type="radio" value="file">
+              <label for="source-file">File</label>
+            </div>
+          </fieldset>
+
+          <div id="hmac-key-field" class="field" hidden>
+            <label class="field-label" for="hmac-key">HMAC key</label>
+            <input id="hmac-key" type="password" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div id="text-input-field">
+            <label class="field-label" for="input">Input</label>
+            <textarea id="input" spellcheck="false" autocomplete="off">hello</textarea>
+          </div>
+
+          <div id="file-input-field" class="file-box" hidden>
+            <label class="field-label" for="local-file">Local file</label>
+            <input id="local-file" type="file">
+            <p id="file-summary">No file selected</p>
+          </div>
+
+          <div class="actions">
+            <button id="run-button" class="primary" type="submit" disabled>Run</button>
+            <button id="clear-button" class="secondary" type="button">Clear</button>
+          </div>
+        </section>
+
+        <section class="pane" aria-labelledby="output-heading">
+          <div class="pane-header">
+            <h2 id="output-heading">Output</h2>
+            <span id="output-meta" class="pane-meta">Waiting for input</span>
+          </div>
+
+          <p id="algorithm-note" class="safety-note" role="note" hidden>
+            MD5 is not collision resistant. Use it only to compare legacy checksums.
+          </p>
+
+          <label class="field-label" for="output">Output</label>
+          <textarea id="output" readonly spellcheck="false"></textarea>
+
+          <div class="actions">
+            <button id="copy-button" class="secondary" type="button" disabled>Copy output</button>
+            <button id="download-button" class="secondary" type="button" disabled>Download output</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="feedback">
+        <p id="status-message" role="status" aria-live="polite"></p>
+        <p id="error-message" role="alert" aria-live="assertive"></p>
+      </div>
+    </form>
+
+    <footer>
+      <span>No uploads, telemetry, cookies, or local storage.</span>
+      <span><a href="../../../README.zh-CN.md">中文说明</a> · 20 MiB file limit</span>
+    </footer>
+  </main>
+
+  <script type="module">
+    import init, {
+      wasm_algorithm_metadata,
+      wasm_decode_text,
+      wasm_digest_bytes,
+      wasm_digest_text,
+      wasm_encode_bytes,
+      wasm_encode_text,
+      wasm_hmac_bytes,
+      wasm_hmac_text,
+    } from "./pkg/encoding_toolbox_web.js";
+
+    const WEB_FILE_MAX_BYTES = 20 * 1024 * 1024;
+    const form = document.getElementById("tool-form");
+    const algorithm = document.getElementById("algorithm");
+    const algorithmNote = document.getElementById("algorithm-note");
+    const input = document.getElementById("input");
+    const output = document.getElementById("output");
+    const hmacKeyField = document.getElementById("hmac-key-field");
+    const hmacKey = document.getElementById("hmac-key");
+    const textInputField = document.getElementById("text-input-field");
+    const fileInputField = document.getElementById("file-input-field");
+    const localFile = document.getElementById("local-file");
+    const fileSummary = document.getElementById("file-summary");
+    const inputLimit = document.getElementById("input-limit");
+    const outputMeta = document.getElementById("output-meta");
+    const runButton = document.getElementById("run-button");
+    const clearButton = document.getElementById("clear-button");
+    const copyButton = document.getElementById("copy-button");
+    const downloadButton = document.getElementById("download-button");
+    const statusMessage = document.getElementById("status-message");
+    const errorMessage = document.getElementById("error-message");
+
+    let metadata;
+    let outputBytes = null;
+
+    function selected(name) {
+      return form.elements[name].value;
+    }
+
+    function setFeedback({ status = "", error = "" } = {}) {
+      statusMessage.textContent = status;
+      errorMessage.textContent = error;
+    }
+
+    function clearOutput() {
+      output.value = "";
+      outputBytes = null;
+      outputMeta.textContent = "Waiting for input";
+      copyButton.disabled = true;
+      downloadButton.disabled = true;
+      setFeedback();
+    }
+
+    function updateAlgorithms() {
+      if (!metadata) return;
+      const operation = selected("operation");
+      const entries = operation === "digest"
+        ? metadata.digests
+        : operation === "hmac"
+          ? metadata.hmacs
+          : metadata.encodings;
+      const previous = algorithm.value;
+      algorithm.replaceChildren(...entries.map((entry) => {
+        const option = document.createElement("option");
+        option.value = entry.key;
+        option.textContent = entry.label;
+        return option;
+      }));
+      if (entries.some((entry) => entry.key === previous)) algorithm.value = previous;
+      hmacKeyField.hidden = operation !== "hmac";
+      if (operation === "decode" && selected("source") === "file") {
+        document.getElementById("source-text").checked = true;
+      }
+      document.getElementById("source-file").disabled = operation === "decode";
+      updateSource();
+      updateWarning();
+      clearOutput();
+    }
+
+    function updateSource() {
+      const fileMode = selected("source") === "file";
+      textInputField.hidden = fileMode;
+      fileInputField.hidden = !fileMode;
+      inputLimit.textContent = fileMode ? "File · 20 MiB max" : "Text · 1 MiB max";
+      clearOutput();
+    }
+
+    function updateWarning() {
+      algorithmNote.hidden = !(selected("operation") === "digest" && algorithm.value === "md5");
+    }
+
+    function formatBytes(bytes) {
+      const value = Uint8Array.from(bytes);
+      try {
+        return {
+          text: new TextDecoder("utf-8", { fatal: true }).decode(value),
+          meta: `Decoded ${value.length} bytes`,
+          bytes: value,
+        };
+      } catch {
+        return {
+          text: Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join(""),
+          meta: `Decoded ${value.length} bytes · hexadecimal preview`,
+          bytes: value,
+        };
+      }
+    }
+
+    async function readSelectedInput() {
+      if (selected("source") === "text") return input.value;
+      const file = localFile.files[0];
+      if (!file) throw new Error("FILE_REQUIRED: Select a local file first.");
+      if (file.size > WEB_FILE_MAX_BYTES) {
+        throw new Error("INPUT_TOO_LARGE: File exceeds the 20 MiB browser limit.");
+      }
+      return new Uint8Array(await file.arrayBuffer());
+    }
+
+    function runOperation(operation, source, algorithmKey, key) {
+      const isBytes = source instanceof Uint8Array;
+      if (operation === "encode") {
+        return isBytes
+          ? wasm_encode_bytes(algorithmKey, source)
+          : wasm_encode_text(algorithmKey, source);
+      }
+      if (operation === "decode") return wasm_decode_text(algorithmKey, source);
+      if (operation === "digest") {
+        return isBytes
+          ? wasm_digest_bytes(algorithmKey, source)
+          : wasm_digest_text(algorithmKey, source);
+      }
+      return isBytes
+        ? wasm_hmac_bytes(algorithmKey, key, source)
+        : wasm_hmac_text(algorithmKey, key, source);
+    }
+
+    form.addEventListener("change", (event) => {
+      if (event.target.name === "operation") updateAlgorithms();
+      if (event.target.name === "source") updateSource();
+      if (event.target === algorithm) {
+        updateWarning();
+        clearOutput();
+      }
+      if (event.target === localFile) {
+        const file = localFile.files[0];
+        fileSummary.textContent = file ? `${file.name} · ${file.size} bytes` : "No file selected";
+        clearOutput();
+      }
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const restoreRunFocus = document.activeElement === runButton;
+      setFeedback();
+      runButton.disabled = true;
+      runButton.textContent = "Running";
+      try {
+        const operation = selected("operation");
+        const source = await readSelectedInput();
+        const response = runOperation(operation, source, algorithm.value, hmacKey.value);
+        if (!response.ok) {
+          throw new Error(`${response.error.code}: ${response.error.message}`);
+        }
+
+        if (operation === "decode") {
+          const decoded = formatBytes(response.bytes);
+          output.value = decoded.text;
+          outputBytes = decoded.bytes;
+          outputMeta.textContent = decoded.meta;
+          setFeedback({ status: decoded.meta });
+        } else {
+          output.value = response.result;
+          outputBytes = new TextEncoder().encode(response.result);
+          outputMeta.textContent = `${response.result.length} characters`;
+          setFeedback({ status: "Operation completed locally" });
+        }
+        copyButton.disabled = false;
+        downloadButton.disabled = false;
+      } catch (error) {
+        clearOutput();
+        setFeedback({ error: error.message || String(error) });
+      } finally {
+        runButton.disabled = false;
+        runButton.textContent = "Run";
+        if (restoreRunFocus) runButton.focus({ preventScroll: true });
+      }
+    });
+
+    clearButton.addEventListener("click", () => {
+      input.value = "";
+      hmacKey.value = "";
+      localFile.value = "";
+      fileSummary.textContent = "No file selected";
+      clearOutput();
+      input.focus();
+    });
+
+    copyButton.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(output.value);
+      setFeedback({ status: "Copied output" });
+    });
+
+    downloadButton.addEventListener("click", () => {
+      if (!outputBytes) return;
+      const extension = selected("operation") === "decode" ? "bin" : "txt";
+      const blob = new Blob([outputBytes], { type: "application/octet-stream" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `encoding-toolbox-${algorithm.value}.${extension}`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      setFeedback({ status: "Downloaded output" });
+    });
+
+    try {
+      await init();
+      metadata = wasm_algorithm_metadata();
+      updateAlgorithms();
+      runButton.disabled = false;
+    } catch {
+      setFeedback({ error: "APP_INIT_FAILED: The local WASM module could not start." });
+    }
+  </script>
+</body>
+</html>

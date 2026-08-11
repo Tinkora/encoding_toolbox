@@ -1,0 +1,7 @@
+/target/
+/dist/
+/.web-build.*/
+/crates/encoding_toolbox_web/node_modules/
+/crates/encoding_toolbox_web/playwright-report/
+/crates/encoding_toolbox_web/static/pkg/
+/crates/encoding_toolbox_web/test-results/

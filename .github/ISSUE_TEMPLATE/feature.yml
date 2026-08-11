@@ -1,0 +1,41 @@
+name: Feature request
+description: Propose a change backed by a repeatable user problem
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Who encounters this problem, in which workflow, and how often?
+      placeholder: Describe the problem without prescribing a feature first.
+    validations:
+      required: true
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Current workaround
+      description: What tools or manual steps do people use today?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: What observable result would solve the problem?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Link public issues, discussions, docs, or examples that show this need.
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Scope check
+      options:
+        - label: This request fits a local encoding, digest, or HMAC workflow.
+          required: true
+        - label: I checked that the current CLI and browser tool do not already solve it.
+          required: true

@@ -1,0 +1,85 @@
+name: Quality
+
+'on':
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    name: Rust workspace
+    permissions:
+      contents: read
+    uses: Tinkora/.github/.github/workflows/reusable-rust-quality.yml@e80d6099799b9d372525f1639aa601504fe8d52b
+    with:
+      toolchain: 1.95.0
+      msrv: 1.95.0
+      locked: true
+
+  wasm-browser:
+    name: WASM and browser
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust and WASM tooling
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.95.0 --profile minimal --no-self-update
+          rustup target add wasm32-unknown-unknown --toolchain 1.95.0
+          cargo +1.95.0 install wasm-pack --version 0.15.0 --locked
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.11.1
+          cache: npm
+          cache-dependency-path: crates/encoding_toolbox_web/package-lock.json
+
+      - name: Install browser test dependencies
+        working-directory: crates/encoding_toolbox_web
+        run: |
+          npm ci --ignore-scripts
+          npx --no-install playwright install --with-deps chromium
+
+      - name: Check WASM target
+        run: cargo +1.95.0 check -p encoding_toolbox_web --target wasm32-unknown-unknown --locked
+
+      - name: Test WASM bridge
+        run: wasm-pack test --node crates/encoding_toolbox_web --locked
+
+      - name: Test browser tool at four viewports
+        working-directory: crates/encoding_toolbox_web
+        env:
+          CI: "true"
+          RUSTUP_TOOLCHAIN: 1.95.0
+        run: npm test
+
+      - name: Assemble deployable Web application
+        env:
+          RUSTUP_TOOLCHAIN: 1.95.0
+        run: scripts/build_web.sh
+
+  documentation:
+    name: Documentation and workflow syntax
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
+
+      - name: Check documentation contracts
+        run: ruby scripts/check_docs.rb
+
+      - name: Test release validator
+        run: ruby scripts/test_validate_release.rb

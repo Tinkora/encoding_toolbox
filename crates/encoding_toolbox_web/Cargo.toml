@@ -1,0 +1,25 @@
+[package]
+name = "encoding_toolbox_web"
+version = "0.1.0"
+description = "Browser-local WebAssembly bridge for Encoding Toolbox"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+encoding_toolbox_core = { path = "../encoding_toolbox_core", version = "=0.1.0" }
+wasm-bindgen.workspace = true
+js-sys.workspace = true
+serde.workspace = true
+serde-wasm-bindgen.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"

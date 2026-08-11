@@ -1,0 +1,62 @@
+name: Pages
+
+'on':
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/quality.yml
+
+  build:
+    name: Build Pages artifact
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Rust and WASM tooling
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.95.0 --profile minimal --no-self-update
+          rustup target add wasm32-unknown-unknown --toolchain 1.95.0
+          cargo +1.95.0 install wasm-pack --version 0.15.0 --locked
+
+      - name: Assemble static application
+        env:
+          RUSTUP_TOOLCHAIN: 1.95.0
+        run: scripts/build_web.sh
+
+      - name: Upload Pages source
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pages-source-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 1
+
+  deploy:
+    name: Deploy GitHub Pages
+    needs: build
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+    uses: Tinkora/.github/.github/workflows/reusable-pages.yml@e80d6099799b9d372525f1639aa601504fe8d52b
+    with:
+      source-artifact-name: pages-source-${{ github.run_id }}-${{ github.run_attempt }}

@@ -1,0 +1,39 @@
+name: Supply chain
+
+'on':
+  pull_request:
+    paths:
+      - Cargo.lock
+      - Cargo.toml
+      - deny.toml
+      - rust-toolchain.toml
+      - '**/Cargo.toml'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    paths:
+      - Cargo.lock
+      - Cargo.toml
+      - deny.toml
+      - rust-toolchain.toml
+      - '**/Cargo.toml'
+      - '.github/workflows/**'
+  schedule:
+    - cron: '23 4 * * 1'
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supply-chain-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    permissions:
+      contents: read
+    uses: Tinkora/.github/.github/workflows/reusable-supply-chain.yml@e80d6099799b9d372525f1639aa601504fe8d52b
+    with:
+      toolchain: 1.95.0

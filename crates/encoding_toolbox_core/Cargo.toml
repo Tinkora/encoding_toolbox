@@ -1,0 +1,19 @@
+[package]
+name = "encoding_toolbox_core"
+version = "0.1.0"
+description = "Pure encoding, digest, and HMAC contracts for Encoding Toolbox"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+base64.workspace = true
+data-encoding.workspace = true
+sha2.workspace = true
+blake3.workspace = true
+md-5.workspace = true
+hmac.workspace = true
+hex.workspace = true
+thiserror.workspace = true
