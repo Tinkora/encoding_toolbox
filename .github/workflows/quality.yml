@@ -83,3 +83,6 @@ jobs:
 
       - name: Test release validator
         run: ruby scripts/test_validate_release.rb
+
+      - name: Test release workflow contracts
+        run: ruby scripts/test_release_workflow.rb

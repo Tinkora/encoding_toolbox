@@ -146,12 +146,16 @@ jobs:
           VERSION: ${{ needs.validate.outputs.version }}
         run: |
           set -euo pipefail
+          runner_temp="$RUNNER_TEMP"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            runner_temp="$(cygpath -u "$RUNNER_TEMP")"
+          fi
           package="encoding-toolbox-cli-${TARGET}-v${VERSION}"
-          staging="$RUNNER_TEMP/$package"
+          staging="$runner_temp/$package"
           mkdir -- "$staging"
           cp -- "target/$TARGET/release/$BINARY" "$staging/"
           cp -- LICENSE README.md README.zh-CN.md "$staging/"
-          tar -czf "$RUNNER_TEMP/${package}.tar.gz" -C "$RUNNER_TEMP" "$package"
+          tar -czf "$runner_temp/${package}.tar.gz" -C "$runner_temp" "$package"
 
       - name: Upload CLI archive
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
