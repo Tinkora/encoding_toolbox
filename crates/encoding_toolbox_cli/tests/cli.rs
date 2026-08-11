@@ -21,7 +21,11 @@ fn run(args: &[&str], input: &[u8], environment: Option<(&str, &str)>) -> Output
         command.env(name, value);
     }
     let mut child = command.spawn().unwrap();
-    child.stdin.take().unwrap().write_all(input).unwrap();
+    let mut stdin = child.stdin.take().unwrap();
+    if let Err(error) = stdin.write_all(input) {
+        assert_eq!(error.kind(), std::io::ErrorKind::BrokenPipe);
+    }
+    drop(stdin);
     child.wait_with_output().unwrap()
 }
 
@@ -139,4 +143,23 @@ fn hmac_reads_only_an_environment_key_and_never_echoes_it() {
     );
     assert_eq!(missing.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&missing.stderr).contains("MISSING_HMAC_KEY"));
+}
+
+#[test]
+fn command_helper_collects_output_when_the_process_exits_before_reading_stdin() {
+    let input = vec![0_u8; 16 * 1024 * 1024];
+    let output = run(
+        &[
+            "hmac",
+            "--algorithm",
+            "sha256",
+            "--key-env",
+            "TINKORA_MISSING_HMAC_KEY",
+        ],
+        &input,
+        None,
+    );
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("MISSING_HMAC_KEY"));
 }
