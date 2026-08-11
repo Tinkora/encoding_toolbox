@@ -6,6 +6,8 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and releases us
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-11
+
 ### Added
 
 - Reversible Base64, Base64URL, Base32, Base32Hex, and Hex transforms.
@@ -14,4 +16,5 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and releases us
 - A browser-local WASM workbench for text and local files.
 - English and Simplified Chinese project documentation.
 
-[Unreleased]: https://github.com/Tinkora/encoding_toolbox/commits/main
+[Unreleased]: https://github.com/Tinkora/encoding_toolbox/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Tinkora/encoding_toolbox/releases/tag/v0.1.0
