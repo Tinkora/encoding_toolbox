@@ -2,6 +2,8 @@
 
 [English](./README.md)
 
+[![在 Ko-fi 上支持 Tinkora](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/tinkora)
+
 [![CI](https://github.com/Tinkora/encoding_toolbox/actions/workflows/ci.yml/badge.svg)](https://github.com/Tinkora/encoding_toolbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 [![Rust 1.95+](https://img.shields.io/badge/rust-1.95%2B-orange.svg)](https://www.rust-lang.org)
