@@ -12,7 +12,7 @@
     "test": "npm run prepare:wasm && playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "1.62.1",
+    "@playwright/test": "1.63.0",
     "http-server": "14.1.1"
   }
 }
